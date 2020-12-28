@@ -69,7 +69,12 @@ class Weight(object):
         self.__NodeWeight = NodeWeight
 
     def get_NodeInput(self):
-        return self.__NodeInput
+        if isinstance( self.__NodeInput, float):
+            return  self.__NodeInput
+        val = 0.0
+        for i in range(0, len(self.__NodeInput)):
+            val += self.__NodeInput[i]
+        return val
 
     def set_NodeInput(self, NodeInput: float):
         self.__NodeInput = NodeInput

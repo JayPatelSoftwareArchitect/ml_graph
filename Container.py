@@ -1,8 +1,8 @@
-from Identity import Identity
 from MutiProcess import Execute
+from Identity import Identity
 
 
-class Container(object, Execute):
+class Container(Execute):
     def __init__(self):
         self.Container = dict()
         Execute.__init__(self)
