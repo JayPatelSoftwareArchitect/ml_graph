@@ -40,13 +40,25 @@ class _ActivationFn(object):
     def set_ActivationFn(self, _ActivationFn):
         self._ActivationFn = _ActivationFn
 
+class _CallFn(object):
+    '''A function wraper (for assigning call function to individual tensor) which will adjust weights of next connected tensors'''
+
+    def __init__(self):
+        self._CallFn = None
+
+    def get_CallFn(self):
+        return self._CallFn
+
+    def set_CallFn(self, _CallFn):
+        self._CallFn = _CallFn
+
 
 class Weight(object):
     '''Each tensor will have connected Tensors from other layer 
     and each of those tensors will have weight connected to current tensor'''
 
     def __init__(self, TNode=None):
-        self.__NodeWeight = 0
+        self.__NodeWeight = 1
         self.__NodeInput = 0
         self.TNode = TNode
 

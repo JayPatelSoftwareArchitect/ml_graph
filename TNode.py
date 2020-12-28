@@ -1,12 +1,12 @@
 from NodeGraph import NodeGraph
 from Identity import Identity
 from Position import Position
-from Weights import WeightDict, _Activation, _Bais, _ActivationFn
+from Weights import WeightDict, _Activation, _Bais, _ActivationFn, _CallFn
 import typing
 import SharedCounter
 
 
-class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _ActivationFn):
+class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _ActivationFn, _CallFn):
     '''Tensor class that has been deeply inherited'''
 
     def __init__(self):
@@ -45,3 +45,5 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
         self.set_Input(val)
         for wtNode in self.N_ConnectedWt:
             self.N_ConnectedWt[wtNode].set_NodeInput(val)            
+
+
