@@ -46,5 +46,4 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
         for wtNode in self.N_ConnectedWt:
             self.N_ConnectedWt[wtNode].set_NodeInput(val)            
 
-    
 

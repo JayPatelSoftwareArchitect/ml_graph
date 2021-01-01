@@ -2,6 +2,7 @@ import typing
 from NodeGraph import NodeGraph
 '''All classes in this file are inherited by each tensor instance (TNode)'''
 import hashlib
+import random
 # class EncodeData():
 #     def __init__(self, option="md5", val):
 #         if option == "md5":
@@ -84,7 +85,7 @@ class Weight(object):
     and each of those tensors will have weight connected to current tensor'''
 
     def __init__(self, TNode=None):
-        self.__NodeWeight = 1
+        self.__NodeWeight = random.randint(0,1)
         self.__NodeInput = None
         self.TNode = TNode
 

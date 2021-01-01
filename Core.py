@@ -30,6 +30,6 @@ for i in range(0,10) :
 
 training.sample(op[0], output_sample)
 training.setActivationFunction(Activation.relu)
-training.fit(op,output_sample)
+training.fit(op,sample_y)
 model.print()
 #For each tensor take all previous connected weights and add them up add bais apply activation and pass that value to next connected weights.

@@ -24,7 +24,12 @@ class Utility(object):
 
             else:
                 Instance_A.P_Connected[Instance_B.get_Id()] = Instance_B
-
+    
+    @staticmethod
+    def compare(Node1, Node2):
+        if Node1[0]._Activation > Node2[0]._Activation:
+            return -1
+        return 1
 
 # class Minst():
 #     def input_single_daimentional_array(input):

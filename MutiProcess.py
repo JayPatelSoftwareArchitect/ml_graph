@@ -13,22 +13,22 @@ class Execute():
 
     def multiProcessTasks(self, NUMBER_OF_PROCESSES, tasks = [] ):
         #task would be an array of tuple of function and args
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_PROCESSES) as executor:
             future_to_ = set()
             for task in range(0, len(tasks)):
                 tuple_ = tasks[task]
-                fnc = tuple_[0]
-                if len(tuple_) > 1:
+                if isinstance(tuple_, tuple):
+                    fnc = tuple_[0]
                     arg_ = tuple_[1]
                     a = executor.submit(fnc,arg_ )
                     future_to_.add(a)
                 else :
-                    a = executor.submit(fnc)
+                    a = executor.submit(tuple_)
                     future_to_.add(a)
             for future in concurrent.futures.as_completed(future_to_):
                 try:
-                    data = future.result()
+                    future.result()
                 except Exception as exc:
-                    print("generated an exception")
+                    print("generated an exception"+exc.__str__())
                 
 
