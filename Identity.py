@@ -2,14 +2,14 @@
 # this will be inherited where applicable
 import typing
 # import uuid
-
+import SharedCounter
 
 class Identity(object):
     '''An id class for consistancy in all classes with unique identity'''
 
     def __init__(self):
-        self.__Id = id(self)  # address of itself
-
+        self.__Id = SharedCounter.Counter_T  # address of itself
+        SharedCounter.Counter_T+= 1
     def get_Id(self) -> int:
         return self.__Id
 

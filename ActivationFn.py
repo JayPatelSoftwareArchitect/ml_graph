@@ -27,8 +27,8 @@ class Activation():
         return math.tanh(value)
 
     def relu(value):
-        if value <= 0:
-            return 0
+        # if value <= 0:
+        #     return 0
 
         return value
 

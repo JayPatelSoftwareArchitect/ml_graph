@@ -81,29 +81,33 @@ class Training(object):
                 input_c = 0
                 for tensor_id in layer.Container:
                     tensor =  layer.Container[tensor_id]
-                    TASKS_INPUT.append((tensor._calculateActivation,input_[input_c]))
-                    print(str(input_[input_c]))
+                    tensor._calculateActivation(input_[input_c])
+                    #TASKS_INPUT.append((tensor._calculateActivation,input_[input_c]))
+                    #print(str(input_[input_c]))
                     input_c+=1
             else:    
                 for tensor_id in layer.Container:
                     tensor =  layer.Container[tensor_id]
-                    TASKS_INPUT.append((tensor._calculateActivation))
+                    tensor._calculateActivation()                 
+                    #TASKS_INPUT.append((tensor._calculateActivation))
             #execute each task parallely for all tensors of first layer.
-            layer.callOnEach(len(layer.Container), TASKS_INPUT)
-            break
+            # try:
+            #     layer.callOnEach(1 , TASKS_INPUT)
+            # except:
+            #     print("exception")
         self.LastLayerId = lid
 
-    def pass_(self,input_=[]):
+    def pass_(self,input_=[], outputs=[]):
         #set input values in first layer tensors
         self.setInput(input_)
-        for tensor_id in self.Model.Container[self.LastLayerId]:
-            tensor = self.Model.Container[self.LastLayerId][tensor_id]
+        for tensor_id in self.Model.Container[self.LastLayerId].Container:
+            tensor = self.Model.Container[self.LastLayerId].Container[tensor_id]
             print(str(tensor._Activation))
+        print("\n Next \n")
 
 
     def fit(self, inputs=[], outputs=[]):
         for index in range(0, len(inputs)) :
-            if isinstance(inputs[index], list):
-                inp_ = inputs[index]
-                op_ = outputs[index]
-                self.pass_(inp_)
+            inp_ = inputs[index]
+            op_ = outputs[index]
+            self.pass_(inp_, op_)

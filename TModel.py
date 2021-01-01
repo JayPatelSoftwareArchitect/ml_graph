@@ -158,12 +158,13 @@ class Model(Identity, Container, Position):
                             nextlayer.Container[_tnode])
                         inner_container[tnode]._add_N_connectedWeight(
                             wt_instance)
-                if previouslayer is not None:
-                    for _tnode in previouslayer.Container:
-                        wt_instance = inner_container[tnode]._getWtInstance(
-                            previouslayer.Container[_tnode])
+             # assign each tensor to all other tensors via weights
+            if previouslayer is not None:
+                for _tnode in previouslayer.Container:
+                    for tnode in inner_container:
+                        wt_instance = previouslayer.Container[_tnode].get_Next_Connected_Wt(tnode)
                         inner_container[tnode]._add_P_connectedWeight(
-                            wt_instance)
+                            wt_instance, _tnode)
             count += 1
 
     def print(self):

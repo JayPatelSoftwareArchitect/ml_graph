@@ -1,7 +1,16 @@
 import typing
 from NodeGraph import NodeGraph
 '''All classes in this file are inherited by each tensor instance (TNode)'''
-
+import hashlib
+# class EncodeData():
+#     def __init__(self, option="md5", val):
+#         if option == "md5":
+#             op = ""
+#             if isinstance(val, list):
+#                 for i in range(0, len(val)):
+#                     hash_obj = hashlib.md5(val[i].encode())
+#                     op.append(hash_obj.hexdigest())
+#             self.getHash = op
 
 class _Bais(object):
     '''Each Tensor will have an instance of Bais'''
@@ -19,13 +28,30 @@ class _Bais(object):
 class _Activation(object):
     '''A input (floating value comming in to model or from other tensors)'''
 
-    def __init__(self, _Input: float):
+    def __init__(self, _Input):
         self._Activation = _Input
 
-    def get_Input(self) -> float:
-        return self._Activation
+    def get_Input(self):
+        if isinstance(self._Activation, float):
+            #print(str(self._Activation))
+            return  self._Activation
+        if isinstance(self._Activation, str):
+            hash_obj = hashlib.md5(self._Activation.encode())
+            #print(str(float.fromhex(hash_obj.hexdigest())))
+            return float.fromhex(hash_obj.hexdigest())
+        if isinstance(self._Activation, list):    
+            val = 0.0
+            for i in range(0, len(self._Activation)):
+                if isinstance(self._Activation[i], str):
+                    hash_obj = hashlib.md5(self._Activation.encode())
+                    val += float.fromhex(hash_obj.hexdigest())
+                else:
+                    val += self._Activation[i]
+            return val
+        raise Exception("type not supported.")
 
-    def set_Input(self, _Input: float) -> float:
+
+    def set_Input(self, _Input):
         self._Activation = _Input
 
 class _ActivationFn(object):
@@ -59,7 +85,7 @@ class Weight(object):
 
     def __init__(self, TNode=None):
         self.__NodeWeight = 1
-        self.__NodeInput = 0
+        self.__NodeInput = None
         self.TNode = TNode
 
     def get_NodeWeight(self):
@@ -70,13 +96,24 @@ class Weight(object):
 
     def get_NodeInput(self):
         if isinstance( self.__NodeInput, float):
+           # print(str(self.__NodeInput))
             return  self.__NodeInput
-        val = 0.0
-        for i in range(0, len(self.__NodeInput)):
-            val += self.__NodeInput[i]
-        return val
+        if isinstance(self.__NodeInput, str):
+            hash_obj = hashlib.md5(self.__NodeInput.encode())
+           # print(str(float.fromhex(hash_obj.hexdigest())))
+            return float.fromhex(hash_obj.hexdigest())
+        if isinstance(self.__NodeInput, list):    
+            val = 0.0
+            for i in range(0, len(self.__NodeInput)):
+                if isinstance(self.__NodeInput[i], str):
+                    hash_obj = hashlib.md5(self.__NodeInput.encode())
+                    val += float.fromhex(hash_obj.hexdigest())
+                else:
+                    val += self.__NodeInput[i]
+            return val
+        raise Exception("type not supported.")
 
-    def set_NodeInput(self, NodeInput: float):
+    def set_NodeInput(self, NodeInput):
         self.__NodeInput = NodeInput
 
 class WeightDict(object):
@@ -98,14 +135,15 @@ class WeightDict(object):
         self.N_ConnectedWt[Weight.TNode.get_Id()] = Weight
         self.PLength += 1
 
-    def _add_P_connectedWeight(self, Weight: Weight):
-        self.P_ConnectedWt[Weight.TNode.get_Id()] = Weight
+    def _add_P_connectedWeight(self, Weight: Weight, prevId: int):
+        #print(str(prevId))
+        self.P_ConnectedWt[prevId] = Weight
         self.NLength += 1
 
-    def get_Prev_Connected_Wt(self, TNodeId: int) -> float:
+    def get_Prev_Connected_Wt(self, TNodeId: int):
         if TNodeId in self.P_ConnectedWt:
             return self.P_ConnectedWt[TNodeId]
 
-    def get_Next_Connected_Wt(self, TNodeId: int) -> float:
+    def get_Next_Connected_Wt(self, TNodeId: int):
         if TNodeId in self.N_ConnectedWt:
             return self.N_ConnectedWt[TNodeId]

@@ -39,11 +39,12 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
             val += self.P_ConnectedWt[wtNode].get_NodeInput() * self.P_ConnectedWt[wtNode].get_NodeWeight()
         self.set_Input(val)
 
-    def _setWeightInputNext(self, _input: float):
+    def _setWeightInputNext(self, _input):
         val = (self.get_ActivationFn())(_input + self.get_Bais())
         #Update node activation value
         self.set_Input(val)
         for wtNode in self.N_ConnectedWt:
             self.N_ConnectedWt[wtNode].set_NodeInput(val)            
 
+    
 
