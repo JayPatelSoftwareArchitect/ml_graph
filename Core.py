@@ -1,7 +1,7 @@
 from TModel import Model
 import tensorflow as tf
 from Training import Training
-from ActivationFn import Activation
+from LogisticRegression import LogisticRegression
 import hashlib
 mnist = tf.keras.datasets.mnist
 
@@ -22,14 +22,14 @@ for i in range(0, len(sample_x)):
     hash_obj = hashlib.md5(sample_x[i].encode())
     op.append(hash_obj.hexdigest())
 
-model = Model(NumLayer=10, NumTensor=[28, 28, 14, 14, 10, 10, 10, 10, 10, 10])
+model = Model(NumLayer=10, NumTensor=[32, 28, 14, 14, 10, 10, 10, 10, 10, 10])
 training = Training(model)
 output_sample = []
 for i in range(0,10) :
     output_sample.append(i)
 
 training.sample(op[0], output_sample)
-training.setActivationFunction(Activation.relu)
+training.setActivationFunction(LogisticRegression)
 training.fit(op,sample_y)
 model.print()
 #For each tensor take all previous connected weights and add them up add bais apply activation and pass that value to next connected weights.

@@ -3,15 +3,16 @@ from NodeGraph import NodeGraph
 '''All classes in this file are inherited by each tensor instance (TNode)'''
 import hashlib
 import random
-# class EncodeData():
-#     def __init__(self, option="md5", val):
-#         if option == "md5":
-#             op = ""
-#             if isinstance(val, list):
-#                 for i in range(0, len(val)):
-#                     hash_obj = hashlib.md5(val[i].encode())
-#                     op.append(hash_obj.hexdigest())
-#             self.getHash = op
+
+class EncodeData():
+    def __init__(self, val, option="md5"):
+        if option == "md5":
+            op = ""
+            if isinstance(val, list):
+                for i in range(0, len(val)):
+                    hash_obj = hashlib.md5(val[i].encode())
+                    op.append(hash_obj.hexdigest())
+            self.getHash = op
 
 class _Bais(object):
     '''Each Tensor will have an instance of Bais'''
@@ -41,20 +42,22 @@ class _Activation(object):
             #print(str(float.fromhex(hash_obj.hexdigest())))
             return float.fromhex(hash_obj.hexdigest())
         if isinstance(self._Activation, list):    
-            val = 0.0
+            val = []
             for i in range(0, len(self._Activation)):
                 if isinstance(self._Activation[i], str):
                     hash_obj = hashlib.md5(self._Activation.encode())
-                    val += float.fromhex(hash_obj.hexdigest())
+                    val.append(float.fromhex(hash_obj.hexdigest()))
                 else:
-                    val += self._Activation[i]
+                    val.append(self._Activation[i])
             return val
         raise Exception("type not supported.")
 
 
-    def set_Input(self, _Input):
-        self._Activation = _Input
-
+    def set_Input(self, _Input, Normalize=None):
+        if Normalize is None:
+            self._Activation = _Input
+        else:
+            self._Activation = Normalize(_Input)
 class _ActivationFn(object):
     '''A function wraper (for assigning activation function to individual tensor)'''
 
@@ -65,7 +68,7 @@ class _ActivationFn(object):
         return self._ActivationFn
 
     def set_ActivationFn(self, _ActivationFn):
-        self._ActivationFn = _ActivationFn
+        self._ActivationFn = _ActivationFn()
 
 class _CallFn(object):
     '''A function wraper (for assigning call function to individual tensor) which will adjust weights of next connected tensors'''

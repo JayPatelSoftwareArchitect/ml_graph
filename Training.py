@@ -50,6 +50,7 @@ class Training(SaveTensors):
             self.Callback = None
             self.LastLayerId = None
             self.FirstLayerId = None
+            self.ParallelExecute = False
             SaveTensors.__init__(self)
         else :
             raise RuntimeError("passed model is not of type Model")
@@ -101,20 +102,30 @@ class Training(SaveTensors):
                 input_c = 0
                 for tensor_id in layer.Container:
                     tensor =  layer.Container[tensor_id]
-                    #tensor._calculateActivation(input_[input_c])
-                    TASKS_INPUT.append((tensor._calculateActivation,input_[input_c]))
+                    
+                    #parallel execution or sequntial execution
+                    if self.ParallelExecute == False:
+
+                        tensor._calculateActivation(input_[input_c])
+                    else:
+                        TASKS_INPUT.append((tensor._calculateActivation,input_[input_c]))
                     #print(str(input_[input_c]))
                     input_c+=1
             else:    
                 for tensor_id in layer.Container:
                     tensor =  layer.Container[tensor_id]
-                    #tensor._calculateActivation()                 
-                    TASKS_INPUT.append(tensor._calculateActivation)
+                    if self.ParallelExecute == False:
+
+                        tensor._calculateActivation()                 
+                    else:
+                        TASKS_INPUT.append(tensor._calculateActivation)
+            
+            if self.ParallelExecute == True:
             #execute each task parallely for all tensors of first layer.
-            try:
-                layer.callOnEach(4 , TASKS_INPUT)
-            except:
-                print("exception")
+                try:
+                    layer.callOnEach(4 , TASKS_INPUT)
+                except:
+                    print("exception")
         self.LastLayerId = lid
 
     def pass_(self,input_=[], outputs=[]):
@@ -148,4 +159,8 @@ class Training(SaveTensors):
         for index in range(0, len(inputs)) :
             inp_ = inputs[index]
             op_ = outputs[index]
+            if isinstance(inp_, list) and not isinstance(inp_[0], float):
+                if isinstance(inp_[0], str):
+                    for i in range(0, len(inp_)):
+                        inp_[i] = float.fromhex(inp_[i])
             self.pass_(inp_, op_)

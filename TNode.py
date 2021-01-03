@@ -2,6 +2,7 @@ from NodeGraph import NodeGraph
 from Identity import Identity
 from Position import Position
 from Weights import WeightDict, _Activation, _Bais, _ActivationFn, _CallFn
+from LogisticRegression import LogisticRegression
 import typing
 import SharedCounter
 
@@ -10,13 +11,19 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
     '''Tensor class that has been deeply inherited'''
 
     def __init__(self):
-
+        #id class
         Identity.__init__(self)
+        #A wraped graph instance
         NodeGraph.__init__(self)
+        #A position identifier
         Position.__init__(self)
+        #A wraped weight dictionary 
         WeightDict.__init__(self)
+        #Node input class
         _Activation.__init__(self, SharedCounter.INITIAL_ACTIVATION)
+        #Node Bais class
         _Bais.__init__(self, SharedCounter.INITIAL_BAIS)
+        #Activation function , set at time of model init. 
         _ActivationFn.__init__(self)
 
     def _calculateActivation(self, _first_input=None):
@@ -34,16 +41,18 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
 
     def _setActivation(self):
         #reset current node Activation value by iterating through all previous weights and it's input. 
-        val = 0.0
-        for wtNode in self.P_ConnectedWt:
-            val += self.P_ConnectedWt[wtNode].get_NodeInput() * self.P_ConnectedWt[wtNode].get_NodeWeight()
-        self.set_Input(val)
+        if isinstance(self.get_ActivationFn(), LogisticRegression):
+            # logistic regression
+            val = []
+            for wtNode in self.P_ConnectedWt:
+                val.append( self._ActivationFn._calculate(self.get_Bais(), self.P_ConnectedWt[wtNode].get_NodeWeight(), self.P_ConnectedWt[wtNode].get_NodeInput()) )
+            self.set_Input(val)
+        else:
+            raise Exception("Only logistic regression is supported. Please set ascivationfunction. ")
 
     def _setWeightInputNext(self, _input):
-        val = (self.get_ActivationFn())(_input + self.get_Bais())
-        #Update node activation value
-        self.set_Input(val)
+        #Update node activation value for each next connected weight instances of current node. 
         for wtNode in self.N_ConnectedWt:
-            self.N_ConnectedWt[wtNode].set_NodeInput(val)            
+            self.N_ConnectedWt[wtNode].set_NodeInput(_input)            
 
 
