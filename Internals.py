@@ -3,6 +3,7 @@ from NodeGraph import NodeGraph
 '''All classes in this file are inherited by each tensor instance (TNode)'''
 import hashlib
 import random
+import SharedCounter 
 
 class EncodeData():
     def __init__(self, val, option="md5"):
@@ -88,7 +89,7 @@ class Weight(object):
     and each of those tensors will have weight connected to current tensor'''
 
     def __init__(self, TNode=None):
-        self.__NodeWeight = random.randint(0,1)
+        self.__NodeWeight = random.uniform(SharedCounter.WEIGHT_START , SharedCounter.WEIGHT_END)
         self.__NodeInput = None
         self.TNode = TNode
 

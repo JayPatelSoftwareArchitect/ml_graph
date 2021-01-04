@@ -3,6 +3,7 @@ from Container import Container
 from TLayer import TLayer
 from NodeGraph import NodeGraph
 from Position import Position
+from Data import Data
 import SharedCounter
 
 
@@ -17,7 +18,7 @@ class Model(Identity, Container, Position):
 
         self.NumLayers = kwargs.get('NumLayer')
         self.NumTensor = kwargs.get('NumTensor')
-
+        self._Data = None
         # Model Initilization by private functions
         self.__InitLayers()
         self.__ConnectLayers()
@@ -167,5 +168,8 @@ class Model(Identity, Container, Position):
                             wt_instance, _tnode)
             count += 1
 
+    def setData(self, xtrain, ytrain, xtest, ytest, op='default'):
+        self._Data = Data(op,xtrain=xtrain, ytrain=ytrain, xtest=xtest, ytest=ytest)
+         
     def print(self):
         print(str(self.get_Id()))

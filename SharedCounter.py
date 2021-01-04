@@ -15,3 +15,9 @@ INITIAL_ACTIVATION = 0.00001
 
 # Bais initial value
 INITIAL_BAIS = 1
+
+#Random weight limits
+WEIGHT_START = 0.1
+WEIGHT_END = 0.9
+RANDOM_STEP = 0.001
+RANDOM_STEP_END = 0.01

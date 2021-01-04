@@ -1,7 +1,7 @@
 from NodeGraph import NodeGraph
 from Identity import Identity
 from Position import Position
-from Weights import WeightDict, _Activation, _Bais, _ActivationFn, _CallFn
+from Internals import WeightDict, _Activation, _Bais, _ActivationFn, _CallFn
 from LogisticRegression import LogisticRegression
 import typing
 import SharedCounter
@@ -56,3 +56,19 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
             self.N_ConnectedWt[wtNode].set_NodeInput(_input)            
 
 
+    @staticmethod
+    def _util_activation(tensor):
+        '''A utility function for a tensor object, that returns calculated total activation'''
+        if isinstance(tensor._Activation, list):
+            total_activation = 0.0
+            for i in range(0, len(tensor._Activation)):
+                total_activation += tensor._Activation[i]
+            return total_activation
+        else:
+            return tensor._Activation
+
+    def _compare_tensor(self, tensor_node):
+        '''If current tensor's activation is higher then passed tensor return true else false'''
+        return TNode._util_activation(self) > TNode._util_activation(tensor_node)
+
+    

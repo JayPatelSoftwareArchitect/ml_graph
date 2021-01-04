@@ -1,8 +1,12 @@
 from TModel import Model
 from Utility import Utility
 from functools import cmp_to_key
+from Data import Data
+from TNode import TNode
 import copy
-
+import SharedCounter
+import random
+       
 class Callback(object):
     def __init__(self):
         self.TNode = []
@@ -41,6 +45,9 @@ class SaveTensors(object):
     def get_all_incorrect_tensors(self):
         return self.InCorrect_Tensors
     
+    def reset(self):
+        self.Correct_Tensors = []
+        self.InCorrect_Tensors = []
 class Training(SaveTensors):
     def __init__(self, model):
         if isinstance(model, Model):
@@ -51,6 +58,8 @@ class Training(SaveTensors):
             self.LastLayerId = None
             self.FirstLayerId = None
             self.ParallelExecute = False
+            self.previous_accuracy = 0.0
+            self.BestModelCopy=model
             SaveTensors.__init__(self)
         else :
             raise RuntimeError("passed model is not of type Model")
@@ -128,6 +137,63 @@ class Training(SaveTensors):
                     print("exception")
         self.LastLayerId = lid
 
+    def optimize_randomly(self, max_tensor=None, min_tensor=None, seen_set=None):
+        step_start = SharedCounter.RANDOM_STEP
+        step_end = SharedCounter.RANDOM_STEP_END
+        # will try to reduce weights of max tensors , and increse weights of min_tensor randomly
+        if isinstance(max_tensor, TNode):
+            if max_tensor.P_ConnectedWt is not None:
+                #iterate through all previous weights .
+                for wt_ in max_tensor.P_ConnectedWt:
+                    weight_instance = max_tensor.P_ConnectedWt[wt_]
+                    weight_instance.set_NodeWeight(weight_instance.get_NodeWeight() - random.uniform(step_start, step_end))
+     
+                    if seen_set.__contains__(weight_instance) is False:
+                        seen_set.add(weight_instance)
+                        #print(weight_instance.TNode.get_Id())
+                        self.optimize_randomly(weight_instance.TNode, seen_set=seen_set)
+
+
+        if isinstance(min_tensor, TNode):
+            if min_tensor.P_ConnectedWt is not None:
+                #iterate through all previous weights .
+                for wt_ in min_tensor.P_ConnectedWt:
+                    weight_instance = min_tensor.P_ConnectedWt[wt_]
+                    weight_instance.set_NodeWeight(weight_instance.get_NodeWeight() + random.uniform(step_start, step_end))
+                   
+                    if seen_set.__contains__(weight_instance) is False:
+                        seen_set.add(weight_instance)
+                        #print(weight_instance.TNode.get_Id())
+                        self.optimize_randomly(weight_instance.TNode, seen_set=seen_set)
+
+    def _pass_helper(self, length, op_tensors, actual):
+        max_ = None
+        for i in range(0, length):
+            if max_ is None:
+                max_ = op_tensors[i] 
+            elif op_tensors[i][0]._compare_tensor(max_[0]):
+                max_ = op_tensors[i]
+        
+        print(str(TNode._util_activation( max_[0])))
+        print("Selected tensor is : "+str(max_[1]) + " Actual: " + str(actual))
+        
+        if max_[1] != actual:
+            seen_set = set()
+
+            if max_[0]._compare_tensor(op_tensors[actual][0]):
+                #max [0] is higher then actual.
+
+                self.optimize_randomly(max_[0], op_tensors[actual][0], seen_set)
+            else:
+                #max [0] is higher then actual.
+                self.optimize_randomly(op_tensors[actual][0], max_[0], seen_set)
+
+                
+            self.add_tensor(max_[0]) #incorrect output from model
+        else:
+            self.add_tensor(max_[0], True) #correct output from model
+      
+
     def pass_(self,input_=[], outputs=[]):
         #set input values in first layer tensors
         self.setInput(input_)
@@ -139,28 +205,36 @@ class Training(SaveTensors):
             index+=1
 
         #sorted(val,key=cmp_to_key(lambda t1,t2: Utility.compare(t1,t2)))
-        max_ = None
-        for i in range(0, index):
-            if max_ is None:
-                max_ = val[i] 
-            elif max_[0]._Activation < val[i][0]._Activation:
-                max_ = val[i]
-        print(str(max_[0]._Activation))
-        print("Selected tensor is : "+str(max_[1]) + " Actual: " + str(outputs))
-        if max_[1] != outputs:
-            self.add_tensor(max_[0]) #incorrect output from model
-        else:
-            self.add_tensor(max_[0], True) #correct output from model
+        self._pass_helper(index,val,outputs)
+        
         print("\n Next \n")
 
-  
+    def calculate_accuracy(self):
+        '''accuracy = the total correct predictions / total predictions (between 0.0 and 1)'''
+        accuracy = len(self.Correct_Tensors) / (len(self.Correct_Tensors) + len(self.InCorrect_Tensors))  
+        if self.previous_accuracy > accuracy:
+            self.Model = self.BestModelCopy
+        elif self.previous_accuracy < accuracy:
+            self.BestModelCopy = self.Model
+            self.previous_accuracy = accuracy
+            
+        if accuracy > 0.5:
+            return False
+        else:
+            return True
 
     def fit(self, inputs=[], outputs=[]):
-        for index in range(0, len(inputs)) :
-            inp_ = inputs[index]
-            op_ = outputs[index]
-            if isinstance(inp_, list) and not isinstance(inp_[0], float):
-                if isinstance(inp_[0], str):
-                    for i in range(0, len(inp_)):
-                        inp_[i] = float.fromhex(inp_[i])
-            self.pass_(inp_, op_)
+        if isinstance(self.Model._Data, Data):
+            if self.Model._Data.extrain is not None:
+                continue_training = True
+                count_pass = 1
+                while(continue_training):
+                    #reset saved tensors
+                    self.reset()
+                    for index in range(0, len(self.Model._Data.extrain)) :
+                        inp_ = self.Model._Data.extrain[index]
+                        op_ = self.Model._Data.eytrain[index]
+                        self.pass_(inp_, op_)
+                    continue_training = self.calculate_accuracy()
+                    print("Pass: "+str(count_pass))
+                    count_pass += 1
