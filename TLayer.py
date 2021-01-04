@@ -19,3 +19,13 @@ class TLayer(Identity, NodeGraph, Container, Position):
         for _ in range(attr, self.NumTNode+1):  # For all tensors
             newTensor = TNode()  # Create a new instance of tensor
             self.add(newTensor)  # add tensor in Container
+
+    def _dynamic_init(self, size):
+        '''This will update connected weight instances of tensor with same length as input'''
+        
+        for tnode_id in self.Container:
+            tnode = self.Container[tnode_id]
+            for wt in tnode.N_ConnectedWt:
+                weightInstance = tnode.N_ConnectedWt[wt]
+                weightInstance.resize_NodeWeight(size)
+        

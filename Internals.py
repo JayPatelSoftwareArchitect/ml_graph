@@ -99,6 +99,12 @@ class Weight(object):
     def set_NodeWeight(self, NodeWeight: float):
         self.__NodeWeight = NodeWeight
 
+    def resize_NodeWeight(self, size):
+        self.__NodeWeight = None
+        self.__NodeWeight = []
+        for _ in range(0, size):
+            self.__NodeWeight.append(random.uniform(SharedCounter.WEIGHT_START , SharedCounter.WEIGHT_END))
+
     def get_NodeInput(self):
         if isinstance( self.__NodeInput, float):
            # print(str(self.__NodeInput))
@@ -108,14 +114,8 @@ class Weight(object):
            # print(str(float.fromhex(hash_obj.hexdigest())))
             return float.fromhex(hash_obj.hexdigest())
         if isinstance(self.__NodeInput, list):    
-            val = 0.0
-            for i in range(0, len(self.__NodeInput)):
-                if isinstance(self.__NodeInput[i], str):
-                    hash_obj = hashlib.md5(self.__NodeInput.encode())
-                    val += float.fromhex(hash_obj.hexdigest())
-                else:
-                    val += self.__NodeInput[i]
-            return val
+            return self.__NodeInput
+            
         raise Exception("type not supported.")
 
     def set_NodeInput(self, NodeInput):

@@ -29,7 +29,7 @@ class TOutput(object):
         self.dist = {}
         self.shape = shape
         self.Lables = []
-        if Lables not None:
+        if Lables is not None:
             for each in Lables:
                 self.Lables.append(each)
 

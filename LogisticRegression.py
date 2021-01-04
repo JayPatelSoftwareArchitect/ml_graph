@@ -7,8 +7,9 @@ class LogisticRegression(object):
         #b0 is bais, b1 is the weight x is the associative input value.
         #returns y , output
         if isinstance(x, list):
+            y = 0.0
             for i in range(0, len(x)):
-                y += self.e(b0 + (b1 * self._normalize(x[i]))) / (1 + self.e(b0 + (b1 * self._normalize(x[i]))))
+                y += self.e(b0 + (b1[i] * self._normalize(x[i]))) / (1 + self.e(b0 + (b1[i] * self._normalize(x[i]))))
             return y
         else:
             y = self.e(b0 + (b1 * self._normalize(x))) / (1 + self.e(b0 + (b1 * self._normalize(x))))

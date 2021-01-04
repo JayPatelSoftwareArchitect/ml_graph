@@ -19,7 +19,7 @@ output_sample = []
 for i in range(0,10) :
     output_sample.append(i)
 
-training.sample(x_train[0], output_sample)
+
 training.setActivationFunction(LogisticRegression)
 training.fit()
 

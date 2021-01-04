@@ -14,7 +14,7 @@ UNSET = 0
 INITIAL_ACTIVATION = 0.00001
 
 # Bais initial value
-INITIAL_BAIS = 1
+INITIAL_BAIS = 0.1
 
 #Random weight limits
 WEIGHT_START = 0.1

@@ -6,6 +6,7 @@ from TNode import TNode
 import copy
 import SharedCounter
 import random
+from Internals import Weight
        
 class Callback(object):
     def __init__(self):
@@ -64,10 +65,13 @@ class Training(SaveTensors):
         else :
             raise RuntimeError("passed model is not of type Model")
 
-    def sample(self, Input_Options=[], Output_Options=[]):
-        #add sample input values and sample output values (all possible outputs).
-        self.Input_Options = Input_Options
-        self.Output_Options = Output_Options
+    def dynamic_init(self):
+        '''This function will use Input_Options to set type of connected weights, ex if input is an array then each connected edge og tnode will have an array type weight with same length.'''
+        if isinstance(self.Model._Data, Data):
+            if self.Model._Data.extrain is not None:
+                size = len(self.Model._Data.extrain[0])
+                for layer_id in self.Model.Container: 
+                    self.Model.Container[layer_id]._dynamic_init(size)                    
 
     def setActivationFunction(self, fn):
         #pass a function that activates the tensor, it should take in a float value and should return a calculated value
@@ -108,18 +112,16 @@ class Training(SaveTensors):
             if first_l is True:
                 first_l = False
                 self.FirstLayerId = lid
-                input_c = 0
                 for tensor_id in layer.Container:
                     tensor =  layer.Container[tensor_id]
                     
                     #parallel execution or sequntial execution
                     if self.ParallelExecute == False:
 
-                        tensor._calculateActivation(input_[input_c])
+                        tensor._calculateActivation(input_)
                     else:
-                        TASKS_INPUT.append((tensor._calculateActivation,input_[input_c]))
-                    #print(str(input_[input_c]))
-                    input_c+=1
+                        TASKS_INPUT.append((tensor._calculateActivation,input_))
+
             else:    
                 for tensor_id in layer.Container:
                     tensor =  layer.Container[tensor_id]
@@ -137,16 +139,36 @@ class Training(SaveTensors):
                     print("exception")
         self.LastLayerId = lid
 
+    def random_change(self, weight_instance, op='+'):
+        if isinstance(weight_instance, Weight):
+            wt = weight_instance.get_NodeWeight()
+            if isinstance(wt, list):
+                new_weight = []
+                if op == '+':
+                    for i in range(0, len(wt)):
+                        new_weight.append(wt[i] + random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END))
+                elif op == '-':
+                    for i in range(0, len(wt)):
+                        new_weight.append(wt[i] - random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END))
+
+                return new_weight
+            else:
+                if op == '+':
+                    return weight_instance.get_NodeWeight() + random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END)
+                elif op == '-':
+                    return weight_instance.get_NodeWeight() - random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END)
+
     def optimize_randomly(self, max_tensor=None, min_tensor=None, seen_set=None):
-        step_start = SharedCounter.RANDOM_STEP
-        step_end = SharedCounter.RANDOM_STEP_END
         # will try to reduce weights of max tensors , and increse weights of min_tensor randomly
+
         if isinstance(max_tensor, TNode):
+            max_tensor.set_Bais(max_tensor.get_Bais() - random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END))
             if max_tensor.P_ConnectedWt is not None:
+
                 #iterate through all previous weights .
                 for wt_ in max_tensor.P_ConnectedWt:
                     weight_instance = max_tensor.P_ConnectedWt[wt_]
-                    weight_instance.set_NodeWeight(weight_instance.get_NodeWeight() - random.uniform(step_start, step_end))
+                    weight_instance.set_NodeWeight(self.random_change(weight_instance, '-'))
      
                     if seen_set.__contains__(weight_instance) is False:
                         seen_set.add(weight_instance)
@@ -155,11 +177,13 @@ class Training(SaveTensors):
 
 
         if isinstance(min_tensor, TNode):
+            min_tensor.set_Bais(min_tensor.get_Bais() - random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END))
             if min_tensor.P_ConnectedWt is not None:
                 #iterate through all previous weights .
                 for wt_ in min_tensor.P_ConnectedWt:
                     weight_instance = min_tensor.P_ConnectedWt[wt_]
-                    weight_instance.set_NodeWeight(weight_instance.get_NodeWeight() + random.uniform(step_start, step_end))
+                    weight_instance.set_NodeWeight(self.random_change(weight_instance, '+'))
+     
                    
                     if seen_set.__contains__(weight_instance) is False:
                         seen_set.add(weight_instance)
@@ -222,9 +246,10 @@ class Training(SaveTensors):
             return False
         else:
             return True
-
+    
     def fit(self, inputs=[], outputs=[]):
         if isinstance(self.Model._Data, Data):
+            self.dynamic_init()
             if self.Model._Data.extrain is not None:
                 continue_training = True
                 count_pass = 1
