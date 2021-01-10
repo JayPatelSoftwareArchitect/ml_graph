@@ -4,12 +4,13 @@ from NodeGraph import NodeGraph
 import hashlib
 import random
 import SharedCounter 
+import numpy as np
 
 class EncodeData():
     def __init__(self, val, option="md5"):
         if option == "md5":
             op = ""
-            if isinstance(val, list):
+            if isinstance(val, (list,np.ndarray)):
                 for i in range(0, len(val)):
                     hash_obj = hashlib.md5(val[i].encode())
                     op.append(hash_obj.hexdigest())
@@ -42,14 +43,14 @@ class _Activation(object):
             hash_obj = hashlib.md5(self._Activation.encode())
             #print(str(float.fromhex(hash_obj.hexdigest())))
             return float.fromhex(hash_obj.hexdigest())
-        if isinstance(self._Activation, list):    
+        if isinstance(self._Activation, (list,np.ndarray)):    
             val = []
             for i in range(0, len(self._Activation)):
                 if isinstance(self._Activation[i], str):
                     hash_obj = hashlib.md5(self._Activation.encode())
                     val.append(float.fromhex(hash_obj.hexdigest()))
                 else:
-                    val.append(self._Activation[i])
+                    return self._Activation
             return val
         raise Exception("type not supported.")
 
@@ -113,7 +114,7 @@ class Weight(object):
             hash_obj = hashlib.md5(self.__NodeInput.encode())
            # print(str(float.fromhex(hash_obj.hexdigest())))
             return float.fromhex(hash_obj.hexdigest())
-        if isinstance(self.__NodeInput, list):    
+        if isinstance(self.__NodeInput, (list,np.ndarray)):    
             return self.__NodeInput
             
         raise Exception("type not supported.")

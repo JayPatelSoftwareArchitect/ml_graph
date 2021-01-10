@@ -6,7 +6,6 @@ from Position import Position
 from Data import Data
 import SharedCounter
 
-
 class Model(Identity, Container, Position):
 
     def __init__(self, **kwargs):

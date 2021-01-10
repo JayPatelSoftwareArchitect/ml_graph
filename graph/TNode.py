@@ -43,9 +43,9 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
         #reset current node Activation value by iterating through all previous weights and it's input. 
         if isinstance(self.get_ActivationFn(), LogisticRegression):
             # logistic regression
-            val = []
+            val = 0.0
             for wtNode in self.P_ConnectedWt:
-                val.append( self._ActivationFn._calculate(self.get_Bais(), self.P_ConnectedWt[wtNode].get_NodeWeight(), self.P_ConnectedWt[wtNode].get_NodeInput()) )
+                val = self._ActivationFn._calculate(self.get_Bais(), self.P_ConnectedWt[wtNode].get_NodeWeight(), self.P_ConnectedWt[wtNode].get_NodeInput(), val) 
             self.set_Input(val)
         else:
             raise Exception("Only logistic regression is supported. Please set ascivationfunction. ")
@@ -57,18 +57,21 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
 
 
     @staticmethod
-    def _util_activation(tensor):
+    def _util_activation(tensor1, tensor2):
         '''A utility function for a tensor object, that returns calculated total activation'''
-        if isinstance(tensor._Activation, list):
-            total_activation = 0.0
-            for i in range(0, len(tensor._Activation)):
-                total_activation += tensor._Activation[i]
-            return total_activation
-        else:
-            return tensor._Activation
-
+        op1_max = 0
+        op2_max = 0
+        if isinstance(tensor1._Activation, (float, int)):
+            op1_max = tensor1._Activation
+            op2_max = tensor2._Activation
+        elif isinstance(tensor1._Activation, list):
+            for i in range(0, len(tensor1._Activation)):
+                    op1_max += tensor1._Activation[i]
+                    op2_max += tensor2._Activation[i]
+        return op1_max > op2_max
+        
     def _compare_tensor(self, tensor_node):
         '''If current tensor's activation is higher then passed tensor return true else false'''
-        return TNode._util_activation(self) > TNode._util_activation(tensor_node)
+        return TNode._util_activation(self, tensor_node)
 
     

@@ -1,55 +1,7 @@
-from TModel import Model
-from Utility import Utility
-from functools import cmp_to_key
-from Data import Data
-from TNode import TNode
-import copy
-import SharedCounter
-import random
-from Internals import Weight
-       
-class Callback(object):
-    def __init__(self):
-        self.TNode = []
-        self.TNodeCounter = 0
-        self.TNodeSelect = 0
-    def addNode(self, node):
-        self.TNode.append(node)
 
-    def remove(self):
-        self.TNode.pop()
-    
-    def set_EachOp(self, select):
-        self.TNodeSelect = select
-
-    def callIter(self):
-        for _ in range(0,self.TNodeSelect):
-            tensor = self.TNode[self.TNodeCounter]
-            tensor._CallFn()
-            self.TNodeCounter+=1
-            if self.TNodeCounter > len(self.TNode):
-                self.TNodeCounter = 0
-
-class SaveTensors(object):
-    def __init__(self):
-        self.Correct_Tensors = []
-        self.InCorrect_Tensors = []
-
-    def add_tensor(self, Tensor, flag=False):
-        if flag:
-            self.Correct_Tensors.append(copy.copy(Tensor))
-        else:
-            self.InCorrect_Tensors.append(copy.copy(Tensor))
-    def get_all_correct_tensors(self):
-        return self.Correct_Tensors
-
-    def get_all_incorrect_tensors(self):
-        return self.InCorrect_Tensors
-    
-    def reset(self):
-        self.Correct_Tensors = []
-        self.InCorrect_Tensors = []
-class Training(SaveTensors):
+from GraphImport import *
+from Optimizer import Optimizer
+class Training(SaveTensors, Optimizer):
     def __init__(self, model):
         if isinstance(model, Model):
             self.Model = model
@@ -60,16 +12,19 @@ class Training(SaveTensors):
             self.FirstLayerId = None
             self.ParallelExecute = False
             self.previous_accuracy = 0.0
-            self.BestModelCopy=model
+            self.current_accuracy = 0.0
+            self.counter_ep = 0
+            self.epoch = 1
+            Optimizer.__init__(self,optimizer='random')
             SaveTensors.__init__(self)
         else :
             raise RuntimeError("passed model is not of type Model")
 
     def dynamic_init(self):
-        '''This function will use Input_Options to set type of connected weights, ex if input is an array then each connected edge og tnode will have an array type weight with same length.'''
+        '''This function will use single input instance to set type of connected weights, ex if input is an array then each connected edge of tnode will have an array type weight with same length.'''
         if isinstance(self.Model._Data, Data):
-            if self.Model._Data.extrain is not None:
-                size = len(self.Model._Data.extrain[0])
+            if self.Model._Data.xtrain is not None:
+                size = len(self.Model._Data.xtrain[0])
                 for layer_id in self.Model.Container: 
                     self.Model.Container[layer_id]._dynamic_init(size)                    
 
@@ -80,17 +35,8 @@ class Training(SaveTensors):
             for tensor_id in layer.Container:
                 tensor = layer.Container[tensor_id]
                 tensor.set_ActivationFn(fn)
-
-    def setCallFunction(self, callfn):
-        for layer_id in self.Model.Container:
-            layer = self.Model.Container[layer_id]
-            for tensor_id in layer.Container:
-                tensor = layer.Container[tensor_id]
-                tensor.set_CallFn(callfn)
-        # simple algo which will select only one tensor of the model on each training example
-        # It will select weights such that it can activate that tensor if current activation value 
-        # is less then threshold value.
-    def setCallBack(self, number_of_selection=1,default=0):
+    
+    def setCallBack(self, Callback,number_of_selection=1,default=0):
         #number_of_selection is an int of howmany tensors will be adjusted be _CallFn per each callIter() default=0 will add all tensors of model
         if default == 0:
             self.Callback = Callback()
@@ -139,84 +85,34 @@ class Training(SaveTensors):
                     print("exception")
         self.LastLayerId = lid
 
-    def random_change(self, weight_instance, op='+'):
-        if isinstance(weight_instance, Weight):
-            wt = weight_instance.get_NodeWeight()
-            if isinstance(wt, list):
-                new_weight = []
-                if op == '+':
-                    for i in range(0, len(wt)):
-                        new_weight.append(wt[i] + random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END))
-                elif op == '-':
-                    for i in range(0, len(wt)):
-                        new_weight.append(wt[i] - random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END))
-
-                return new_weight
-            else:
-                if op == '+':
-                    return weight_instance.get_NodeWeight() + random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END)
-                elif op == '-':
-                    return weight_instance.get_NodeWeight() - random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END)
-
-    def optimize_randomly(self, max_tensor=None, min_tensor=None, seen_set=None):
-        # will try to reduce weights of max tensors , and increse weights of min_tensor randomly
-
-        if isinstance(max_tensor, TNode):
-            max_tensor.set_Bais(max_tensor.get_Bais() - random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END))
-            if max_tensor.P_ConnectedWt is not None:
-
-                #iterate through all previous weights .
-                for wt_ in max_tensor.P_ConnectedWt:
-                    weight_instance = max_tensor.P_ConnectedWt[wt_]
-                    weight_instance.set_NodeWeight(self.random_change(weight_instance, '-'))
-     
-                    if seen_set.__contains__(weight_instance) is False:
-                        seen_set.add(weight_instance)
-                        #print(weight_instance.TNode.get_Id())
-                        self.optimize_randomly(weight_instance.TNode, seen_set=seen_set)
-
-
-        if isinstance(min_tensor, TNode):
-            min_tensor.set_Bais(min_tensor.get_Bais() - random.uniform(SharedCounter.RANDOM_STEP, SharedCounter.RANDOM_STEP_END))
-            if min_tensor.P_ConnectedWt is not None:
-                #iterate through all previous weights .
-                for wt_ in min_tensor.P_ConnectedWt:
-                    weight_instance = min_tensor.P_ConnectedWt[wt_]
-                    weight_instance.set_NodeWeight(self.random_change(weight_instance, '+'))
-     
-                   
-                    if seen_set.__contains__(weight_instance) is False:
-                        seen_set.add(weight_instance)
-                        #print(weight_instance.TNode.get_Id())
-                        self.optimize_randomly(weight_instance.TNode, seen_set=seen_set)
-
     def _pass_helper(self, length, op_tensors, actual):
         max_ = None
+        correct_one = None
         for i in range(0, length):
             if max_ is None:
                 max_ = op_tensors[i] 
             elif op_tensors[i][0]._compare_tensor(max_[0]):
                 max_ = op_tensors[i]
-        
-        print(str(TNode._util_activation( max_[0])))
-        print("Selected tensor is : "+str(max_[1]) + " Actual: " + str(actual))
-        
-        if max_[1] != actual:
-            seen_set = set()
-
+            if op_tensors[i][1] == actual:
+                correct_one = op_tensors[i][0]
+        # print(str(TNode._util_activation( max_[0])))
+        #print("Selected tensor is : "+str(max_[1]) + " Actual: " + str(actual))
+        self.counter_ep += 1
+        if max_[0] != correct_one:
+            self.add_tensor(correct_one)
             if max_[0]._compare_tensor(op_tensors[actual][0]):
                 #max [0] is higher then actual.
-
-                self.optimize_randomly(max_[0], op_tensors[actual][0], seen_set)
+                self.add_tensor(max_[0],max=True) #incorrect output from model
+                
             else:
                 #max [0] is higher then actual.
-                self.optimize_randomly(op_tensors[actual][0], max_[0], seen_set)
-
+                self.add_tensor(max_[0],min=True) #incorrect output from model
                 
-            self.add_tensor(max_[0]) #incorrect output from model
         else:
-            self.add_tensor(max_[0], True) #correct output from model
-      
+            self.add_tensor(max_[0], flag=True) #correct output from model
+        if self.counter_ep % self.epoch == 0:
+            self.Optimizer.call(self.InCorrect_Tensors_Max, self.InCorrect_Tensors_Min)
+            self.reset()
 
     def pass_(self,input_=[], outputs=[]):
         #set input values in first layer tensors
@@ -227,39 +123,42 @@ class Training(SaveTensors):
             tensor = self.Model.Container[self.LastLayerId].Container[tensor_id]
             val.append((tensor, index))
             index+=1
-
+        
         #sorted(val,key=cmp_to_key(lambda t1,t2: Utility.compare(t1,t2)))
         self._pass_helper(index,val,outputs)
         
-        print("\n Next \n")
+        # print("\n Next \n")
 
     def calculate_accuracy(self):
         '''accuracy = the total correct predictions / total predictions (between 0.0 and 1)'''
-        accuracy = len(self.Correct_Tensors) / (len(self.Correct_Tensors) + len(self.InCorrect_Tensors))  
-        if self.previous_accuracy > accuracy:
-            self.Model = self.BestModelCopy
-        elif self.previous_accuracy < accuracy:
-            self.BestModelCopy = self.Model
-            self.previous_accuracy = accuracy
-            
-        if accuracy > 0.5:
-            return False
-        else:
-            return True
+        self.previous_accuracy = self.current_accuracy
+        accuracy = 0.0
+        if len(self.Correct_Tensors) > 0:
+            accuracy = len(self.Correct_Tensors) / (len(self.Correct_Tensors) + len(self.InCorrect_Tensors))  
+        self.current_accuracy = accuracy
+        self.Correct_Tensors.clear()
+        self.InCorrect_Tensors.clear()
+        return accuracy
     
-    def fit(self, inputs=[], outputs=[]):
+    def fit(self, inputs=[], outputs=[], epoch=1):
         if isinstance(self.Model._Data, Data):
-            self.dynamic_init()
-            if self.Model._Data.extrain is not None:
+            #self.dynamic_init()
+            self.epoch = epoch
+            if self.Model._Data.xtrain is not None:
                 continue_training = True
                 count_pass = 1
                 while(continue_training):
-                    #reset saved tensors
-                    self.reset()
-                    for index in range(0, len(self.Model._Data.extrain)) :
-                        inp_ = self.Model._Data.extrain[index]
-                        op_ = self.Model._Data.eytrain[index]
+                    #reset saved tensors              
+                    for index in range(0, len(self.Model._Data.xtrain)) :
+                        inp_ = self.Model._Data.xtrain[index]
+                        op_ = self.Model._Data.ytrain[index]
                         self.pass_(inp_, op_)
-                    continue_training = self.calculate_accuracy()
-                    print("Pass: "+str(count_pass))
+                    accur = self.calculate_accuracy()
+                    if accur < 0.9:
+                        continue_training = True
+                    # if continue_training == True:
+                    #     self._update_weight()
+
+                    print("Pass: "+str(count_pass) + " Accuracy: " + str(accur))
                     count_pass += 1
+            
