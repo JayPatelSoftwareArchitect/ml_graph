@@ -11,7 +11,7 @@ import SharedCounter
 class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _ActivationFn, _CallFn, Properties) :
     '''Tensor class that has been deeply inherited'''
 
-    def __init__(self):
+    def __init__(self, layer=None):
         #id class
         Identity.__init__(self)
         #A wraped graph instance
@@ -28,6 +28,7 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
         _ActivationFn.__init__(self)
         #properties for each tnode, for different optimizing algorithms.
         Properties.__init__(self)
+        self.Layer = layer
 
     def _calculateActivation(self, _first_input=None):
         #first layer node then set input as passed value. Else set input as multiplication of all previous node's activations and weights to current activation value.
@@ -58,6 +59,7 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
             #set input as an activated array.
             self.set_Input(val)
             #set total activation
+            self.Layer.NodeActivations[self.Layer.pass_counter].append((self.get_Id(),total_activation))
             self.set_ActivationVal(total_activation) 
         else:
             raise Exception("Only logistic regression is supported. Please set ascivationfunction. ")

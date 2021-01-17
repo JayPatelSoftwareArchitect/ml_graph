@@ -31,6 +31,16 @@ class _Bais(object):
 class Properties(object):
     def __init__(self):
         self.ActivationVal = None
+        self.Loss = []
+    
+    def reset_Loss(self):
+        self.Loss.clear()
+
+    def set_Loss(self, value):
+        self.Loss.append(value)
+    
+    def get_Loss(self):
+        return self.Loss
 
     def set_ActivationVal(self, value):
         self.ActivationVal = value

@@ -93,6 +93,8 @@ class Training(Optimizer):
                     layer.callOnEach(10 , TASKS_INPUT)
                 except:
                     print("exception")
+            #update layer storage
+            layer.updatePassInfo()
         self.LastLayerId = lid
 
     def stratergy1(self, length, op_tensors, actual):
@@ -106,6 +108,7 @@ class Training(Optimizer):
                 max_ = op_tensors[i]
             if op_tensors[i][1] == actual:
                 correct_one = op_tensors[i][0]
+            
         # print(str(TNode._util_activation( max_[0])))
         print(""+str(max_[1]) + ":" + str(actual))
         self.counter_ep += 1

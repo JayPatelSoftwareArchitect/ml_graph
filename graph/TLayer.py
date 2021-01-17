@@ -4,7 +4,7 @@ from Identity import Identity
 from Container import Container
 from Position import Position
 import SharedCounter
-
+import numpy as np
 class TLayer(Identity, NodeGraph, Container, Position):
     """Pass Number of Tensors"""
 
@@ -15,10 +15,19 @@ class TLayer(Identity, NodeGraph, Container, Position):
         Position.__init__(self)
 
         self.NumTNode = kwargs.get('NumTNode')
+        #here nodeactivations will be for each pass [tuple(nodeid,nodeactivation)]
+        self.NodeActivations = list()
+        self.NodeActivations.append(list())
+        self.pass_counter = 0
+
         attr = SharedCounter.Counter
         for _ in range(attr, self.NumTNode+1):  # For all tensors
-            newTensor = TNode()  # Create a new instance of tensor
+            newTensor = TNode(layer=self)  # Create a new instance of tensor
             self.add(newTensor)  # add tensor in Container
+    def reset_activation_storage(self):
+        self.pass_counter = 0
+        self.NodeActivations.clear()
+        self.NodeActivations.append(list())
 
     def _dynamic_init(self, size):
         '''This will update connected weight instances of tensor with same length as input'''
@@ -28,4 +37,8 @@ class TLayer(Identity, NodeGraph, Container, Position):
             for wt in tnode.N_ConnectedWt:
                 weightInstance = tnode.N_ConnectedWt[wt]
                 weightInstance.resize_NodeWeight(size)
-        
+    
+    def updatePassInfo(self):
+        self.pass_counter += 1
+        self.NodeActivations.append(list())
+  
