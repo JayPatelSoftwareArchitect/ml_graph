@@ -5,7 +5,7 @@ import hashlib
 import random
 import SharedCounter 
 import numpy as np
-
+import random
 class EncodeData():
     def __init__(self, val, option="md5"):
         if option == "md5":
@@ -28,6 +28,15 @@ class _Bais(object):
     def set_Bais(self, _Bais: float) -> float:
         self._Bais = _Bais
 
+class Properties(object):
+    def __init__(self):
+        self.ActivationVal = None
+
+    def set_ActivationVal(self, value):
+        self.ActivationVal = value
+    
+    def get_ActivationVal(self):
+        return self.ActivationVal
 
 class _Activation(object):
     '''A input (floating value comming in to model or from other tensors)'''
@@ -57,6 +66,8 @@ class _Activation(object):
 
     def set_Input(self, _Input, Normalize=None):
         if Normalize is None:
+            if isinstance(_Input, list):
+                _Input = np.array(_Input)
             self._Activation = _Input
         else:
             self._Activation = Normalize(_Input)
@@ -90,21 +101,29 @@ class Weight(object):
     and each of those tensors will have weight connected to current tensor'''
 
     def __init__(self, TNode=None):
-        self.__NodeWeight = random.uniform(SharedCounter.WEIGHT_START , SharedCounter.WEIGHT_END)
+        self.__NodeWeight = SharedCounter.WEIGHT_START
         self.__NodeInput = None
+        self.__Bais = None
         self.TNode = TNode
+        self.LocalMax_Index = 0
+        self.LocalMin_Index = 0
+        self.LocalMax_Activation = 0
+        self.LocalMin_Activation = 1
 
     def get_NodeWeight(self):
         return self.__NodeWeight
 
     def set_NodeWeight(self, NodeWeight: float):
         self.__NodeWeight = NodeWeight
+        self.__Bais = SharedCounter.INITIAL_BAIS
 
     def resize_NodeWeight(self, size):
         self.__NodeWeight = None
+        self.__Bais = []
         self.__NodeWeight = []
         for _ in range(0, size):
-            self.__NodeWeight.append(random.uniform(SharedCounter.WEIGHT_START , SharedCounter.WEIGHT_END))
+            self.__NodeWeight.append(random.uniform(SharedCounter.WEIGHT_START, SharedCounter.WEIGHT_END))
+            self.__Bais.append(random.uniform(SharedCounter.WEIGHT_START, SharedCounter.WEIGHT_END))
 
     def get_NodeInput(self):
         if isinstance( self.__NodeInput, float):
@@ -118,9 +137,38 @@ class Weight(object):
             return self.__NodeInput
             
         raise Exception("type not supported.")
-
+    def hypothesis(self, in_, wt_):
+        return np.multiply(in_ , wt_)
     def set_NodeInput(self, NodeInput):
         self.__NodeInput = NodeInput
+        
+        # self.LocalMax_Index = 0
+        # self.LocalMin_Index = 0
+        # self.LocalMax_Activation = 0
+        # self.LocalMin_Activation = 1
+        # for _ in range(0, len(self.__NodeInput)):
+        #     if isinstance(self.__NodeWeight, (list, np.ndarray)):
+        #         x__ = self.__NodeWeight[_] * self.__NodeInput[_]
+        #         if  x__ > self.LocalMax_Activation:
+        #             self.LocalMax_Index = _
+        #             self.LocalMax_Activation = x__
+        #         if  x__ < self.LocalMin_Activation:
+        #             self.LocalMin_Activation = x__
+        #             self.LocalMin_Index = _
+                
+        #     else:
+        #         x__ = self.__NodeWeight * self.__NodeInput[_]
+        #         if x__ > self.LocalMax_Activation:
+        #             self.LocalMax_Index = _
+        #             self.LocalMax_Activation = x__
+        #         if  x__ < self.LocalMin_Activation:
+        #             self.LocalMin_Activation = x__
+        #             self.LocalMin_Index = _
+
+    def set_NodeBais(self, NodeBais:float):
+        self.__Bais = NodeBais
+    def get_NodeBais(self):
+        return self.__Bais
 
 class WeightDict(object):
     '''Each tensor will have a Dictionary that holds Next connected weights

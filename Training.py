@@ -1,8 +1,8 @@
 
 from GraphImport import *
 from Optimizer import Optimizer
-class Training(SaveTensors, Optimizer):
-    def __init__(self, model):
+class Training(Optimizer):
+    def __init__(self, model, activationfn=None):
         if isinstance(model, Model):
             self.Model = model
             self.Output_Options = []
@@ -14,9 +14,14 @@ class Training(SaveTensors, Optimizer):
             self.previous_accuracy = 0.0
             self.current_accuracy = 0.0
             self.counter_ep = 0
-            self.epoch = 1
-            Optimizer.__init__(self,optimizer='random')
-            SaveTensors.__init__(self)
+            self.optimum_pass = 1
+            self.activationfn = activationfn()
+            self.setActivationFunction(activationfn)
+            #save a ref copy of all nodes of model.
+            self.SaveTensors = SaveTensors(allTNodes=self.Model.get_AllTNodes()) 
+            Optimizer.__init__(self,SavedTensors=self.SaveTensors,optimizer='random', activationfn=self.activationfn)
+
+
         else :
             raise RuntimeError("passed model is not of type Model")
 
@@ -24,8 +29,13 @@ class Training(SaveTensors, Optimizer):
         '''This function will use single input instance to set type of connected weights, ex if input is an array then each connected edge of tnode will have an array type weight with same length.'''
         if isinstance(self.Model._Data, Data):
             if self.Model._Data.xtrain is not None:
-                size = len(self.Model._Data.xtrain[0])
+                previous_id = -1
+                
                 for layer_id in self.Model.Container: 
+                    if previous_id == - 1:
+                        previous_id = layer_id
+                    size = len(self.Model.Container[previous_id].Container)
+                    previous_id = layer_id
                     self.Model.Container[layer_id]._dynamic_init(size)                    
 
     def setActivationFunction(self, fn):
@@ -80,12 +90,13 @@ class Training(SaveTensors, Optimizer):
             if self.ParallelExecute == True:
             #execute each task parallely for all tensors of first layer.
                 try:
-                    layer.callOnEach(4 , TASKS_INPUT)
+                    layer.callOnEach(10 , TASKS_INPUT)
                 except:
                     print("exception")
         self.LastLayerId = lid
 
-    def _pass_helper(self, length, op_tensors, actual):
+    def stratergy1(self, length, op_tensors, actual):
+        #take last tensor of model, and save it accordingly.
         max_ = None
         correct_one = None
         for i in range(0, length):
@@ -96,23 +107,22 @@ class Training(SaveTensors, Optimizer):
             if op_tensors[i][1] == actual:
                 correct_one = op_tensors[i][0]
         # print(str(TNode._util_activation( max_[0])))
-        #print("Selected tensor is : "+str(max_[1]) + " Actual: " + str(actual))
+        print(""+str(max_[1]) + ":" + str(actual))
         self.counter_ep += 1
         if max_[0] != correct_one:
-            self.add_tensor(correct_one)
-            if max_[0]._compare_tensor(op_tensors[actual][0]):
+            self.SaveTensors.add_tensor(correct_one)
                 #max [0] is higher then actual.
-                self.add_tensor(max_[0],max=True) #incorrect output from model
+            self.SaveTensors.add_tensor(max_[0],max=True) #incorrect output from model
                 
-            else:
                 #max [0] is higher then actual.
-                self.add_tensor(max_[0],min=True) #incorrect output from model
-                
+            self.SaveTensors.add_tensor(correct_one,min=True) #incorrect output from model
+            if self.counter_ep % self.optimum_pass == 0:
+                #self.optimum_pass += self.optimum_pass
+                self.Optimizer.call()
+                self.SaveTensors.resetArrays()         
         else:
-            self.add_tensor(max_[0], flag=True) #correct output from model
-        if self.counter_ep % self.epoch == 0:
-            self.Optimizer.call(self.InCorrect_Tensors_Max, self.InCorrect_Tensors_Min)
-            self.reset()
+            self.SaveTensors.add_tensor(max_[0], flag=True) #correct output from model
+       
 
     def pass_(self,input_=[], outputs=[]):
         #set input values in first layer tensors
@@ -125,7 +135,7 @@ class Training(SaveTensors, Optimizer):
             index+=1
         
         #sorted(val,key=cmp_to_key(lambda t1,t2: Utility.compare(t1,t2)))
-        self._pass_helper(index,val,outputs)
+        self.stratergy1(index,val,outputs)
         
         # print("\n Next \n")
 
@@ -133,17 +143,18 @@ class Training(SaveTensors, Optimizer):
         '''accuracy = the total correct predictions / total predictions (between 0.0 and 1)'''
         self.previous_accuracy = self.current_accuracy
         accuracy = 0.0
-        if len(self.Correct_Tensors) > 0:
-            accuracy = len(self.Correct_Tensors) / (len(self.Correct_Tensors) + len(self.InCorrect_Tensors))  
+        if len(self.SaveTensors.Correct_Tensors) > 0:
+            accuracy = len(self.SaveTensors.Correct_Tensors) / (len(self.SaveTensors.Correct_Tensors) + len(self.SaveTensors.InCorrect_Tensors))  
         self.current_accuracy = accuracy
-        self.Correct_Tensors.clear()
-        self.InCorrect_Tensors.clear()
+        self.SaveTensors.resetArrays()
         return accuracy
     
-    def fit(self, inputs=[], outputs=[], epoch=1):
+    # def calculate_loss(self):
+
+    def fit(self, inputs=[], outputs=[], optimum_pass=1):
         if isinstance(self.Model._Data, Data):
-            #self.dynamic_init()
-            self.epoch = epoch
+            self.dynamic_init()
+            self.optimum_pass = optimum_pass
             if self.Model._Data.xtrain is not None:
                 continue_training = True
                 count_pass = 1
@@ -154,6 +165,7 @@ class Training(SaveTensors, Optimizer):
                         op_ = self.Model._Data.ytrain[index]
                         self.pass_(inp_, op_)
                     accur = self.calculate_accuracy()
+                    
                     if accur < 0.9:
                         continue_training = True
                     # if continue_training == True:

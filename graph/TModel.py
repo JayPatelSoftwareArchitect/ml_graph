@@ -170,5 +170,15 @@ class Model(Identity, Container, Position):
     def setData(self, xtrain, ytrain, xtest, ytest, op='default'):
         self._Data = Data(op,xtrain=xtrain, ytrain=ytrain, xtest=xtest, ytest=ytest)
          
+    def get_AllTNodes(self):
+        all_nodes = dict()
+        for index in self.Container:  # for all layers of model
+            layer = self.Container[index]
+            inner_container = layer.Container
+            for tnode in inner_container:
+                all_nodes[tnode] = inner_container[tnode]
+
+        return all_nodes
+
     def print(self):
         print(str(self.get_Id()))
