@@ -10,8 +10,8 @@ sample_x = []
 sample_y = []
 
 
-model = Model(NumLayer=4, NumTensor=[32, 10, 10, 10])
-model.setData(x_train[:500], y_train[:500], x_test[:50], y_test[:50],op='md5')
+model = Model(NumLayer=6, NumTensor=[32, 20, 30, 15, 10, 10])
+model.setData(x_train[:5], y_train[:5], x_test[:5], y_test[:5],op='md5')
 #passing in tensorflow, a encoded dataset
 # x_t = np.array(model._Data.xtrain)
 # x_ = np.array(model._Data.xtest)

@@ -19,7 +19,7 @@ class Training(Optimizer):
             self.setActivationFunction(activationfn)
             #save a ref copy of all nodes of model.
             self.SaveTensors = SaveTensors(allTNodes=self.Model.get_AllTNodes()) 
-            Optimizer.__init__(self,SavedTensors=self.SaveTensors,optimizer='random', activationfn=self.activationfn)
+            Optimizer.__init__(self,SavedTensors=self.SaveTensors,optimizer='gradientdecent', activationfn=self.activationfn)
 
 
         else :
@@ -108,7 +108,10 @@ class Training(Optimizer):
                 max_ = op_tensors[i]
             if op_tensors[i][1] == actual:
                 correct_one = op_tensors[i][0]
-            
+        if max_[0] != correct_one:
+            #set loss to last layer nodes.
+            correct_one.Layer.set_loss(correct_one)
+                
         # print(str(TNode._util_activation( max_[0])))
         print(""+str(max_[1]) + ":" + str(actual))
         self.counter_ep += 1
@@ -122,6 +125,9 @@ class Training(Optimizer):
             if self.counter_ep % self.optimum_pass == 0:
                 #self.optimum_pass += self.optimum_pass
                 self.Optimizer.call()
+                #reset storage
+                for i in range(0, length):
+                    tnode = op_tensors[i][0]
                 self.SaveTensors.resetArrays()         
         else:
             self.SaveTensors.add_tensor(max_[0], flag=True) #correct output from model
@@ -156,7 +162,7 @@ class Training(Optimizer):
 
     def fit(self, inputs=[], outputs=[], optimum_pass=1):
         if isinstance(self.Model._Data, Data):
-            self.dynamic_init()
+            #self.dynamic_init()
             self.optimum_pass = optimum_pass
             if self.Model._Data.xtrain is not None:
                 continue_training = True

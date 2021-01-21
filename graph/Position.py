@@ -19,3 +19,9 @@ class Position(object):
 
     def set_PositionAsHidden(self):
         self.Position = SharedCounter.HIDDEN
+
+    def islastLayerNode(self):
+        if self.Position == SharedCounter.END:
+            return True
+        else:
+            return False

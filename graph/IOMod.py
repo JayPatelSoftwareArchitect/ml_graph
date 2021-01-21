@@ -7,6 +7,13 @@ class SaveTensors(object):
         self.InCorrect_Tensors_Max = set()
         self.InCorrect_Tensors_Min = set()
         self.All_Tensors = allTNodes
+        self.last_layer = []
+    
+    def set_last_nodes(self):
+        for t_id in self.All_Tensors:
+            if self.All_Tensors[t_id].islastLayerNode() == True:
+                self.last_layer.append(t_id)
+
     def add_tensor(self, Tensor, flag=False, max=False, min=False):
         
         Tensor_id = Tensor.get_Id()

@@ -46,9 +46,11 @@ class BackProp(object):
         self.SavedTensors = None
         if isinstance(SavedTensors, SaveTensors):
             self.SavedTensors = SavedTensors
-
+            self.SavedTensors.set_last_nodes()
     def call(self):
+        #j` = z.delta  z = current activation delta = loss of the unit 
         self.seen_set.clear()
+
 
 
 class Random(object):
@@ -69,9 +71,16 @@ class Random(object):
     def call(self):
         self.seen_set.clear()
         self.depth = 1
-        
+        allmax_connected = dict()
+        allmin_connected = dict()
         max_tensors=self.SavedTensors.get_all_max_tensors()
         min_tensors=self.SavedTensors.get_all_min_tensors()
+        # for k in max_tensors:
+        #     for j in max_tensors[k].P_Connected:
+        #         allmax_connected[max_tensors[k].P_Connected[j].get_Id()] = max_tensors[k].P_Connected[j]
+        # for k in min_tensors:
+        #     for j in min_tensors[k].P_Connected:
+        #         allmin_connected[min_tensors[k].P_Connected[j].get_Id()] = min_tensors[k].P_Connected[j]
         seen_set=self.seen_set
         self.optimize_randomly(max_tensors=max_tensors, min_tensors=min_tensors, seen_set=seen_set)
     
@@ -89,17 +98,16 @@ class Random(object):
             bais_ = weight_instance.get_NodeBais()
             current_activation = self.activationfn._calculate(bais_, wt, in_)
             if op == '+':
-                while current_activation < self.threshold-1:
-                    self.apply_change(wt, op=op)
-                    self.apply_change(bais_, op=op)
-                    
-                    current_activation = self.activationfn._calculate(bais_, wt, in_)
+                #while current_activation < self.threshold-1:
+                self.apply_change(wt, op=op)
+                self.apply_change(bais_, op=op)
+                current_activation = self.activationfn._calculate(bais_, wt, in_)
             elif op == '-':
-                while current_activation != 0.0:
-                    self.apply_change(wt, op=op)
-                    self.apply_change(bais_, op=op)
+                #while current_activation > self.threshold + 1:
+                self.apply_change(wt, op=op)
+                self.apply_change(bais_, op=op)
                     
-                    current_activation = self.activationfn._calculate(bais_, wt, in_)
+                current_activation = self.activationfn._calculate(bais_, wt, in_)
       
             # self.depth += 1    
 

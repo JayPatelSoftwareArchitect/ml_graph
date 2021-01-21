@@ -15,20 +15,16 @@ class TLayer(Identity, NodeGraph, Container, Position):
         Position.__init__(self)
 
         self.NumTNode = kwargs.get('NumTNode')
-        #here nodeactivations will be for each pass [tuple(nodeid,nodeactivation)]
-        self.NodeActivations = list()
-        self.NodeActivations.append(list())
         self.pass_counter = 0
 
         attr = SharedCounter.Counter
         for _ in range(attr, self.NumTNode+1):  # For all tensors
             newTensor = TNode(layer=self)  # Create a new instance of tensor
             self.add(newTensor)  # add tensor in Container
+    
     def reset_activation_storage(self):
         self.pass_counter = 0
-        self.NodeActivations.clear()
-        self.NodeActivations.append(list())
-
+      
     def _dynamic_init(self, size):
         '''This will update connected weight instances of tensor with same length as input'''
         
@@ -40,5 +36,12 @@ class TLayer(Identity, NodeGraph, Container, Position):
     
     def updatePassInfo(self):
         self.pass_counter += 1
-        self.NodeActivations.append(list())
-  
+
+    def set_loss(self, correct_node):
+        for key in self.Container:
+            tnode = self.Container[key]
+            loss_ = correct_node.get_ActivationVal() - tnode.get_ActivationVal() 
+            tnode.set_Loss(loss_)      
+        #left here, after setting wt instances loss, calculate tnode of loss that connects to wt instances
+        
+

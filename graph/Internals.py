@@ -6,6 +6,7 @@ import random
 import SharedCounter 
 import numpy as np
 import random
+from Identity import Identity
 class EncodeData():
     def __init__(self, val, option="md5"):
         if option == "md5":
@@ -31,20 +32,16 @@ class _Bais(object):
 class Properties(object):
     def __init__(self):
         self.ActivationVal = None
-        self.Loss = []
-    
-    def reset_Loss(self):
-        self.Loss.clear()
-
-    def set_Loss(self, value):
-        self.Loss.append(value)
-    
+        self.Loss = dict()
+        self.ActivationVal_Storage = dict()
+        
     def get_Loss(self):
         return self.Loss
 
     def set_ActivationVal(self, value):
         self.ActivationVal = value
-    
+        #for back prop
+        
     def get_ActivationVal(self):
         return self.ActivationVal
 
@@ -106,19 +103,21 @@ class _CallFn(object):
         self._CallFn = _CallFn
 
 
-class Weight(object):
+class Weight(Properties,Identity):
     '''Each tensor will have connected Tensors from other layer 
     and each of those tensors will have weight connected to current tensor'''
 
     def __init__(self, TNode=None):
-        self.__NodeWeight = SharedCounter.WEIGHT_START
+        self.__NodeWeight = random.uniform(SharedCounter.WEIGHT_START, SharedCounter.WEIGHT_END)
         self.__NodeInput = None
-        self.__Bais = None
+        self.__Bais = random.uniform(SharedCounter.WEIGHT_START, SharedCounter.WEIGHT_END)
         self.TNode = TNode
         self.LocalMax_Index = 0
         self.LocalMin_Index = 0
         self.LocalMax_Activation = 0
         self.LocalMin_Activation = 1
+        Properties.__init__(self)
+        Identity.__init__(self)
 
     def get_NodeWeight(self):
         return self.__NodeWeight

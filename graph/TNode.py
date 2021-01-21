@@ -59,7 +59,7 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
             #set input as an activated array.
             self.set_Input(val)
             #set total activation
-            self.Layer.NodeActivations[self.Layer.pass_counter].append((self.get_Id(),total_activation))
+            self.ActivationVal_Storage[self.Layer.pass_counter] = total_activation
             self.set_ActivationVal(total_activation) 
         else:
             raise Exception("Only logistic regression is supported. Please set ascivationfunction. ")
@@ -68,7 +68,12 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
         #Update node activation value for each next connected weight instances of current node. 
         for wtNode in self.N_ConnectedWt:
             self.N_ConnectedWt[wtNode].set_NodeInput(_input)            
-
+    
+    def set_Loss(self, value, id_=None):
+        self.Loss[(self.Layer.pass_counter, id_)] = value
+        for _ in self.P_ConnectedWt:
+            wt_ = self.P_ConnectedWt[_]
+            wt_.Loss[(self.Layer.pass_counter, self.get_Id())] = value * wt_.get_NodeWeight()
 
     @staticmethod
     def _util_activation(tensor1, tensor2):

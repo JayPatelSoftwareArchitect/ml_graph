@@ -15,10 +15,8 @@ class LogisticRegression(object):
                 y = np.add(b0, np.multiply(b1,x)).sum() / len(x)
             else:
                 for i in range(0, len(x)):
-                    y += b0[i] + (b1[i] * x[i]) / (1 + b0[i] + (b1[i] * x[i]))
-                else:
                     y += b0 + (b1 * x[i]) / (1 + b0 + (b1 * x[i]))
-              
+                
             return self._isactivated(y)
         else:
             y += b0 + (b1 * x) / (1 + b0 + (b1 * x))
