@@ -3,7 +3,7 @@ import numpy as np
 class LogisticRegression(object):
     def __init__(self):
         self.e = math.exp
-        self.threshold = 0.5
+        self.threshold = 0.0001
 
     def _calculate(self, b0, b1, x):
         #hypothesis function
@@ -14,8 +14,9 @@ class LogisticRegression(object):
             if isinstance(b1, (list, np.ndarray)):            
                 y = np.add(b0, np.multiply(b1,x)).sum() / len(x)
             else:
-                for i in range(0, len(x)):
-                    y += b0 + (b1 * x[i]) / (1 + b0 + (b1 * x[i]))
+                y = ((x*b1)).sum() + b0
+                # for i in range(0, len(x)):
+                #     y += b0 + (b1 * x[i]) / (1 + b0 + (b1 * x[i]))
                 
             return self._isactivated(y)
         else:
@@ -34,7 +35,5 @@ class LogisticRegression(object):
         #     normal = 1/(1 + self.e(0-abs(value)))
         # else:
         #     normal = 0.0
-        if value > self.threshold:
-            return value
-        else:
-            return 0.0
+        value = 1/(1 + self.e(0-abs(value)))
+        return value

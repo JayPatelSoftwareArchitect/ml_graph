@@ -33,25 +33,81 @@ class Callback(object):
 
 class Optimizer(object):
     #any coptimizer which call function that takes in 3 inputs, max tensors that were output , min tensors that were outputed by model, 
-    def __init__(self, SavedTensors=None ,optimizer='',activationfn=None, threshold=None):
+    def __init__(self, model,SavedTensors=None ,optimizer='',activationfn=None, threshold=None):
         if optimizer == 'random':
             self.Optimizer = Random(SavedTensors=SavedTensors,activationfn=activationfn)
         elif optimizer == 'gradientdecent':
-            self.Optimizer = BackProp(SavedTensors=SavedTensors)
+            self.Optimizer = BackProp(model=model,SavedTensors=SavedTensors)
 
 class BackProp(object):
-    def __init__(self, SavedTensors):
+    def __init__(self, model ,SavedTensors):
         self.accuracy = 0.0
         self.seen_set = set()
         self.SavedTensors = None
+        self.Model = model
+        self.alpha = 0.1
+        self.CorrectOnes = dict()
         if isinstance(SavedTensors, SaveTensors):
             self.SavedTensors = SavedTensors
             self.SavedTensors.set_last_nodes()
+    
+    def addCorrect(self,pass_,tnode):
+        self.CorrectOnes[pass_] = tnode
+
+    def weight_change(self, loss, activation , weight):
+        return weight - (self.alpha * (activation * loss ))
+
+    def bais_change(self, loss, activation , bais):
+        return bais + (self.alpha * (loss * activation))
+
+
     def call(self):
         #j` = z.delta  z = current activation delta = loss of the unit 
         self.seen_set.clear()
+        # each layer of model has a pass counter which will be the key of loss and activation for each tnode and each wt instance
+        # setup is in such a way that those values will be updated as model passes through inputs.
+        # So here just the calculation of weight change will be left. 
+        start_c = 1
+        pass_continue = True
+        if isinstance(self.Model, Model):
+            while pass_continue == True:
+                correct_one = self.CorrectOnes[start_c]
+                l_id = None
+                for layer_id in self.Model.Container:
+                    l_id = layer_id
+                layer = self.Model.Container[l_id]
+                while True:    
+                    for t_node_id in layer.Container:
+                        t_node = layer.Container[t_node_id]
+                        if t_node != correct_one:
+                            for each_wt_id in t_node.P_ConnectedWt:
+                                wt = t_node.P_ConnectedWt[each_wt_id]
+                                loss_, activation_ = wt._weight_change_call(start_c)
+                                new_weight = self.weight_change(loss_, activation_, wt.get_NodeWeight())
+                                wt.set_NodeWeight(new_weight)
+                                new_bais = self.bais_change(loss_,activation_, wt.get_NodeBais())
+                                wt.set_NodeBais(new_bais)
+                                #print("Wt_Id: " + str(each_wt_id) + "weight: "+ str(new_weight) + "bais: "+ str(new_bais))
+                        else:
+                            for each_wt_id in t_node.P_ConnectedWt:
+                            
+                                wt = t_node.P_ConnectedWt[each_wt_id]
+                            
+                                new_weight = wt.get_NodeWeight() + self.alpha*(wt.get_ActivationVal() + wt.get_NodeBais()) 
+                                wt.set_NodeWeight(new_weight)
 
+                    if len(layer.P_Connected) == 0:
+                        break
+                    for previousL in layer.P_Connected:
+                        layer = layer.P_Connected[previousL]
 
+                #check the last pass number to be same as current and if yes , close this loop
+                if self.Model.Container[l_id].pass_counter - 1 != start_c:
+                    start_c += 1
+                else:
+                    self.Model.Container[l_id].pass_counter = 1
+                    pass_continue = False
+            
 
 class Random(object):
 

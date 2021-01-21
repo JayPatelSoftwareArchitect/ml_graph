@@ -10,16 +10,17 @@ class Training(Optimizer):
             self.Callback = None
             self.LastLayerId = None
             self.FirstLayerId = None
+            self.LastNodes = []
             self.ParallelExecute = False
             self.previous_accuracy = 0.0
             self.current_accuracy = 0.0
-            self.counter_ep = 0
-            self.optimum_pass = 1
+            self.counter_ep = 1
+            self.optimum_pass = 10
             self.activationfn = activationfn()
             self.setActivationFunction(activationfn)
             #save a ref copy of all nodes of model.
             self.SaveTensors = SaveTensors(allTNodes=self.Model.get_AllTNodes()) 
-            Optimizer.__init__(self,SavedTensors=self.SaveTensors,optimizer='gradientdecent', activationfn=self.activationfn)
+            Optimizer.__init__(self,model=model,SavedTensors=self.SaveTensors,optimizer='gradientdecent', activationfn=self.activationfn)
 
 
         else :
@@ -62,8 +63,10 @@ class Training(Optimizer):
         first_l = True
         lid = 0
         for layer_id in self.Model.Container:
+
             lid = layer_id
             layer = self.Model.Container[layer_id]
+
             TASKS_INPUT = []
             if first_l is True:
                 first_l = False
@@ -94,13 +97,17 @@ class Training(Optimizer):
                 except:
                     print("exception")
             #update layer storage
-            layer.updatePassInfo()
-        self.LastLayerId = lid
 
+        if self.LastLayerId == None:
+            self.LastLayerId = lid
+            for t in self.Model.Container[lid].Container:
+                self.LastNodes.append(self.Model.Container[lid].Container[t])
     def stratergy1(self, length, op_tensors, actual):
         #take last tensor of model, and save it accordingly.
         max_ = None
         correct_one = None
+        total_op = 0.0
+        
         for i in range(0, length):
             if max_ is None:
                 max_ = op_tensors[i] 
@@ -108,11 +115,16 @@ class Training(Optimizer):
                 max_ = op_tensors[i]
             if op_tensors[i][1] == actual:
                 correct_one = op_tensors[i][0]
-        if max_[0] != correct_one:
+            total_op += op_tensors[i][0].get_ActivationVal()
+            print(str(op_tensors[i][0].get_ActivationVal()))
+        mean_ = total_op / length
+        #if max_[0] != correct_one:
             #set loss to last layer nodes.
-            correct_one.Layer.set_loss(correct_one)
-                
+        correct_one.Layer.set_loss_last(correct_node=correct_one, mean_=mean_)
+        for l in self.Model.Container:
+            self.Model.Container[l].updatePassInfo()
         # print(str(TNode._util_activation( max_[0])))
+        self.Optimizer.addCorrect(self.counter_ep, correct_one)
         print(""+str(max_[1]) + ":" + str(actual))
         self.counter_ep += 1
         if max_[0] != correct_one:
@@ -123,11 +135,12 @@ class Training(Optimizer):
                 #max [0] is higher then actual.
             self.SaveTensors.add_tensor(correct_one,min=True) #incorrect output from model
             if self.counter_ep % self.optimum_pass == 0:
+                self.counter_ep = 1
                 #self.optimum_pass += self.optimum_pass
                 self.Optimizer.call()
-                #reset storage
-                for i in range(0, length):
-                    tnode = op_tensors[i][0]
+                for l in self.Model.Container:
+                    self.Model.Container[l].reset_activation_storage()
+                #reset storage of output of models
                 self.SaveTensors.resetArrays()         
         else:
             self.SaveTensors.add_tensor(max_[0], flag=True) #correct output from model

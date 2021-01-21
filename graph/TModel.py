@@ -24,6 +24,7 @@ class Model(Identity, Container, Position):
         self.__ConnectTensors()
         self.__ConnectWeightsOfTensor()
 
+
     def __InitLayers(self):
         '''Initilize all layers and individual tensors from layer'''
 

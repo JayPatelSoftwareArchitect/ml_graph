@@ -40,10 +40,19 @@ class Properties(object):
 
     def set_ActivationVal(self, value):
         self.ActivationVal = value
-        #for back prop
-        
+         
     def get_ActivationVal(self):
         return self.ActivationVal
+    
+    #for back prop   
+    def set_ActivationStorage(self, value, pass_counter):
+        #self.set_ActivationVal(value)
+        if isinstance(value, np.ndarray):
+            value = value.sum() 
+        self.ActivationVal_Storage[pass_counter] = value
+
+    def get_ActivationStorage(self, pass_counter):
+        return self.ActivationVal_Storage[pass_counter]
 
 class _Activation(object):
     '''A input (floating value comming in to model or from other tensors)'''
@@ -108,9 +117,9 @@ class Weight(Properties,Identity):
     and each of those tensors will have weight connected to current tensor'''
 
     def __init__(self, TNode=None):
-        self.__NodeWeight = random.uniform(SharedCounter.WEIGHT_START, SharedCounter.WEIGHT_END)
+        self.__NodeWeight = SharedCounter.WEIGHT_START
         self.__NodeInput = None
-        self.__Bais = random.uniform(SharedCounter.WEIGHT_START, SharedCounter.WEIGHT_END)
+        self.__Bais = random.uniform( SharedCounter.INITIAL_BAIS, SharedCounter.alpha)
         self.TNode = TNode
         self.LocalMax_Index = 0
         self.LocalMin_Index = 0
@@ -149,7 +158,8 @@ class Weight(Properties,Identity):
     def hypothesis(self, in_, wt_):
         return np.multiply(in_ , wt_)
     def set_NodeInput(self, NodeInput):
-        self.__NodeInput = NodeInput
+
+        self.__NodeInput = NodeInput.sum()
         
         # self.LocalMax_Index = 0
         # self.LocalMin_Index = 0
@@ -179,6 +189,11 @@ class Weight(Properties,Identity):
     def get_NodeBais(self):
         return self.__Bais
 
+    def _weight_change_call(self,pass_counter):
+        loss = self.Loss[pass_counter]
+        activation = self.ActivationVal_Storage[pass_counter]
+        return (loss, activation)
+    
 class WeightDict(object):
     '''Each tensor will have a Dictionary that holds Next connected weights
     and Previous connected Weights For Store of 

@@ -10,8 +10,8 @@ sample_x = []
 sample_y = []
 
 
-model = Model(NumLayer=6, NumTensor=[32, 20, 30, 15, 10, 10])
-model.setData(x_train[:5], y_train[:5], x_test[:5], y_test[:5],op='md5')
+model = Model(NumLayer=6, NumTensor=[784, 20, 30, 15, 10, 10])
+model.setData(x_train[:5000], y_train[:5000], x_test[:100], y_test[:100],op='flatten')
 #passing in tensorflow, a encoded dataset
 # x_t = np.array(model._Data.xtrain)
 # x_ = np.array(model._Data.xtest)
@@ -43,7 +43,7 @@ training = Training(model, LogisticRegression)
 
 #training.setActivationFunction(LogisticRegression)
 training.setCallBack(Callback)
-training.fit(optimum_pass=5)
+training.fit(optimum_pass=10)
 
 # model.print()
 #For each tensor take all previous connected weights and add them up add bais apply activation and pass that value to next connected weights.

@@ -51,16 +51,24 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
             val = []
             #a total activtion from all previous connected weights.
             total_activation = 0.0 
-
+            max_active = None
             for wtNode in self.P_ConnectedWt:
                 _ = self._ActivationFn._calculate(self.P_ConnectedWt[wtNode].get_NodeBais(), self.P_ConnectedWt[wtNode].get_NodeWeight(), self.P_ConnectedWt[wtNode].get_NodeInput())
+                #save weight activation value 
+                self.P_ConnectedWt[wtNode].set_ActivationStorage(self.P_ConnectedWt[wtNode].get_NodeInput() , self.Layer.pass_counter)
+                self.P_ConnectedWt[wtNode].set_ActivationVal(_)
                 val.append(_) 
+                if max_active == None:
+                    max_active = _
+                elif max_active < _:
+                    max_active = _
                 total_activation += _
             #set input as an activated array.
             self.set_Input(val)
             #set total activation
-            self.ActivationVal_Storage[self.Layer.pass_counter] = total_activation
-            self.set_ActivationVal(total_activation) 
+            self.set_ActivationVal(max_active)
+            self.set_ActivationStorage(total_activation, self.Layer.pass_counter)
+
         else:
             raise Exception("Only logistic regression is supported. Please set ascivationfunction. ")
 
@@ -69,22 +77,28 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
         for wtNode in self.N_ConnectedWt:
             self.N_ConnectedWt[wtNode].set_NodeInput(_input)            
     
+    def _cal_wt_loss(self,wt_, val):
+        return val * wt_.get_NodeWeight()
+
     def set_Loss(self, value, id_=None):
-        self.Loss[(self.Layer.pass_counter, id_)] = value
+        self.Loss[self.Layer.pass_counter] = value
         for _ in self.P_ConnectedWt:
             wt_ = self.P_ConnectedWt[_]
-            wt_.Loss[(self.Layer.pass_counter, self.get_Id())] = value * wt_.get_NodeWeight()
+            #loss could save id and counter for keys or for simplicity just pass counter.
+            wt_.Loss[self.Layer.pass_counter] = self._cal_wt_loss(wt_, value)
 
     @staticmethod
     def _util_activation(tensor1, tensor2):
         '''A utility function for a tensor object, that returns calculated total activation'''
         op1_max = 0
         op2_max = 0
-        op1_max = tensor1.get_ActivationVal()
-        op2_max = tensor2.get_ActivationVal()
-      
-        return op1_max > op2_max
-        
+        op1_max = complex(tensor1.get_ActivationVal()).real
+        op2_max = complex(tensor2.get_ActivationVal()).real
+        if abs(op1_max) >= abs(op2_max):      
+            return True
+        else:
+            return False 
+
     def _compare_tensor(self, tensor_node):
         '''If current tensor's activation is higher then passed tensor return true else false'''
         return TNode._util_activation(self, tensor_node)

@@ -25,3 +25,8 @@ class Position(object):
             return True
         else:
             return False
+    def isFirstLayer(self):
+        if self.Position == SharedCounter.START:
+            return True
+        else:
+            return False

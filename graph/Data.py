@@ -18,18 +18,22 @@ class Data(object):
             self.xtrain = encoded[0]
             self.xtest = encoded[1] 
 
-        if op == 'default':
-            xt_ = np.array([])
-            yt_ = np.array([])
+        if op == 'flatten':
+            xt_ = list()
+            yt_ = list()
             En = Encode(self)
             for _ in range(0,len(self.xtrain)):
-                np.append(xt_,np.array([]) )
-                En._get_Normalized_array(self.xtrain[_], xt_[_])
+                xt_.append([])
+                instance = self.xtrain[_]
+                En._get_Normalized_array(instance, xt_[_])
+                xt_[_] = np.asarray(xt_[_])
             for _ in range(0,len(self.xtest)):
-                np.append(yt_,np.array([]) )
+                yt_.append([])
                 En._get_Normalized_array(self.xtest[_], yt_[_])
-            self.xtrain = xt_
-            self.xtest = yt_
+                yt_[_] = np.asarray(yt_[_])
+            
+            self.xtrain =  xt_ 
+            self.xtest =  yt_ 
             
 class Encode(object):
     def __init__(self, data):
@@ -49,13 +53,14 @@ class Encode(object):
         elif isinstance(arr, str):
             temp = arr
         return temp
-    def _get_Normalized_array(self, arr, add=[]):
+    def _get_Normalized_array(self, arr=[], add=[]):
         
         if isinstance(arr, (int, float)):
             add.append(arr)
         else:
             for i in range(0, len(arr)):
-                self._get_Normalized_array(arr[i], add)
+                instance = arr[i]
+                self._get_Normalized_array(instance, add)
             
     def _stringInterop(self, op='md5',xtrain=[], xtest=[] ):
         
