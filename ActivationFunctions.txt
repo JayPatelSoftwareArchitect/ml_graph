@@ -1,0 +1,175 @@
+
+class CustomNonlinearActivation():
+   
+    @classmethod
+    def add_c(value_):
+        #log(a) + e^|ib|
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.log(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ + b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+   
+    @classmethod
+    def add_c2(value_):
+        #e^a + e^|ib|
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.exp(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ + b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+   
+    @classmethod
+    def add_c3(value_):
+        #log(1+a) + e^|ib| 
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.log1p(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ + b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+   
+      
+    @classmethod
+    def sub_c(value_):
+        #log(a) * e^|ib|
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.log(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ - b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+   
+    @classmethod
+    def sub_c2(value_):
+        #e^a - e^|ib|
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.exp(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ - b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+   
+    @classmethod
+    def sub_c3(value_):
+        #log(1+a) - e^|ib| 
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.log1p(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ - b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+
+
+    @classmethod
+    def mul_c(value_):
+        #log(a) * e^|ib|
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.log(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ * b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+   
+    @classmethod
+    def mul_c2(value_):
+        #e^a * e^|ib|
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.exp(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ * b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+   
+    @classmethod
+    def mul_c3(value_):
+        #log(1+a) * e^|ib| 
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.log1p(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ * b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+   
+    @classmethod
+    def div_c(value_):
+        #log(a) / e^|ib|
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.log(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ / b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+   
+    @classmethod    
+    def div_c2(value_):
+        #e^a / e^|ib|
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.exp(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ / b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+    
+    @classmethod
+    def div_c3(value_):
+        #log(1+a) / e^|ib| 
+        value_ = tf.dtypes.cast(value_, tf.complex64)
+        a_ = tf.math.log1p(tf.math.real(value_))
+        
+        b_ = tf.math.exp(tf.math.imag(value_))
+        
+        a_ = tf.where(tf.math.is_nan(a_), tf.ones_like(a_) , a_)
+        b_ = tf.where(tf.math.is_nan(b_), tf.ones_like(b_) , b_)
+        r_ = a_ / b_
+        r_ = tf.where(tf.math.is_nan(r_), tf.ones_like(r_), r_)
+        return r_
+
+
+
