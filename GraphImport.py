@@ -1,10 +1,9 @@
 import sys
-sys.path.append('/home/jay/Main/tmp_prj/ml_graph/')
-sys.path.append('/home/jay/Main/tmp_prj/ml_graph/graph')
+
+sys.path.append(sys.path[0]+'/graph')
 
 from TModel import Model
 import tensorflow as tf
-from LogisticRegression import LogisticRegression
 import hashlib
 from Utility import Utility
 from functools import cmp_to_key

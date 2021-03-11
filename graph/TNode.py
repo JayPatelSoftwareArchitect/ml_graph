@@ -2,7 +2,6 @@ from NodeGraph import NodeGraph
 from Identity import Identity
 from Position import Position
 from Internals import WeightDict, _Activation, _Bais, _ActivationFn, _CallFn, Properties
-from LogisticRegression import LogisticRegression
 import typing
 import numpy as np
 import SharedCounter
@@ -35,42 +34,13 @@ class TNode(Identity, NodeGraph, Position, WeightDict, _Activation, _Bais, _Acti
         if _first_input is not None:
             self._setActivationFirst(_first_input)
         else :
-            self._setActivation()
+            # self._setActivation()
         #set all next connected weight input with value
         self._setWeightInputNext(self.get_Input())
 
     def _setActivationFirst(self, _first_input):
         #for first layer nodes the input will be the actual input value.
         self.set_Input(_first_input)
-
-
-    def _setActivation(self):
-        #reset current node Activation value by iterating through all previous weights and it's input. 
-        if isinstance(self.get_ActivationFn(), LogisticRegression):
-            # logistic regression
-            val = []
-            #a total activtion from all previous connected weights.
-            total_activation = 0.0 
-            max_active = None
-            for wtNode in self.P_ConnectedWt:
-                _ = self._ActivationFn._calculate(self.P_ConnectedWt[wtNode].get_NodeBais(), self.P_ConnectedWt[wtNode].get_NodeWeight(), self.P_ConnectedWt[wtNode].get_NodeInput())
-                #save weight activation value 
-                self.P_ConnectedWt[wtNode].set_ActivationStorage(self.P_ConnectedWt[wtNode].get_NodeInput() , self.Layer.pass_counter)
-                self.P_ConnectedWt[wtNode].set_ActivationVal(_)
-                val.append(_) 
-                if max_active == None:
-                    max_active = _
-                elif max_active < _:
-                    max_active = _
-                total_activation += _
-            #set input as an activated array.
-            self.set_Input(val)
-            #set total activation
-            self.set_ActivationVal(max_active)
-            self.set_ActivationStorage(total_activation, self.Layer.pass_counter)
-
-        else:
-            raise Exception("Only logistic regression is supported. Please set ascivationfunction. ")
 
     def _setWeightInputNext(self, _input):
         #Update node activation value for each next connected weight instances of current node. 

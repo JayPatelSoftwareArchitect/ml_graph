@@ -5,7 +5,6 @@ print(sys.path)
 from TModel import Model
 import tensorflow as tf
 from Training import Training
-from LogisticRegression import LogisticRegression
 
 import csv
 x_data = []
@@ -46,5 +45,4 @@ for j in range(0, len(r_index)):
 model = Model(NumLayer=5, NumTensor=[10, 6, 4, 4, 2])
 model.setData(x, y, x, y)
 training = Training(model)
-training.setActivationFunction(LogisticRegression)
 training.fit()
