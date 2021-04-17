@@ -116,7 +116,7 @@ class Training(Optimizer):
             if op_tensors[i][1] == actual:
                 correct_one = op_tensors[i][0]
             total_op += op_tensors[i][0].get_ActivationVal()
-            print(str(op_tensors[i][0].get_ActivationVal()))
+            # print(str(op_tensors[i][0].get_ActivationVal()))
         mean_ = total_op / length
         #if max_[0] != correct_one:
             #set loss to last layer nodes.
@@ -125,7 +125,7 @@ class Training(Optimizer):
             self.Model.Container[l].updatePassInfo()
         # print(str(TNode._util_activation( max_[0])))
         self.Optimizer.addCorrect(self.counter_ep, correct_one)
-        print(""+str(max_[1]) + ":" + str(actual))
+        print("Model output: "+str(max_[1]) + " Actual Output:" + str(actual))
         self.counter_ep += 1
         if max_[0] != correct_one:
             self.SaveTensors.add_tensor(correct_one)
